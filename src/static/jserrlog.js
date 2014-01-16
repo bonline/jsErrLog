@@ -40,7 +40,7 @@ window.onerror=function(msg, file_loc, line_no){
 		// process any existing onerror handler 
 		jsErrLog.fnPreviousOnErrorHandler(msg, file_loc, line_no);
 	}
-	return true;
+	return false;
 }
 
 jsErrLog.appendScript = function(index, src) {

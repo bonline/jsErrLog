@@ -1,6 +1,5 @@
-from google.appengine.ext import db
-from google.appengine.ext import webapp
-from google.appengine.ext.webapp import util
+from google.appengine.ext import ndb
+import webapp2
 from google.appengine.runtime.apiproxy_errors import CapabilityDisabledError 
 import os
 import string
@@ -8,28 +7,28 @@ from google.appengine.api import xmpp
 import httpagentparser
 import urlparse
 
-class LogErr(db.Model):
-        serverName = db.StringProperty()
-        serverPath = db.StringProperty()
-        fileLoc = db.StringProperty()
-        lineNo = db.StringProperty()
-        errMsg = db.StringProperty()
-        infoMsg = db.StringProperty()
-        IP = db.StringProperty()
-        UA = db.StringProperty()
-        OSName = db.StringProperty()
-        OSVer = db.StringProperty()
-        BrowserName = db.StringProperty()
-        BrowserVer = db.StringProperty()
-        guid = db.StringProperty()
-        ts = db.DateTimeProperty( auto_now_add=True )
+class LogErr(ndb.Model):
+        serverName = ndb.StringProperty()
+        serverPath = ndb.StringProperty()
+        fileLoc = ndb.StringProperty()
+        lineNo = ndb.StringProperty()
+        errMsg = ndb.StringProperty()
+        infoMsg = ndb.StringProperty()
+        IP = ndb.StringProperty()
+        UA = ndb.StringProperty()
+        OSName = ndb.StringProperty()
+        OSVer = ndb.StringProperty()
+        BrowserName = ndb.StringProperty()
+        BrowserVer = ndb.StringProperty()
+        guid = ndb.StringProperty()
+        ts = ndb.DateTimeProperty( auto_now_add=True )
 
-class LogUser(db.Model):
-        userName = db.StringProperty()
-        serverName = db.StringProperty()
-        active = bool(False)
+class LogUser(ndb.Model):
+        userName = ndb.StringProperty()
+        serverName = ndb.StringProperty()
+        userActive = ndb.BooleanProperty(default=False)
         
-class MainHandler(webapp.RequestHandler):
+class MainHandler(webapp2.RequestHandler):
     def get(self):
         QfileLoc = self.request.get("fl")
         QlineNo = self.request.get("ln")
@@ -66,9 +65,9 @@ class MainHandler(webapp.RequestHandler):
         try:
             storeLog.put()
             errMsg = ""
-        except CapabilityDisabledError, err:
+        except CapabilityDisabledError as err:
             errMsg = "// AppEngine is in read-only mode at the moment: " + err + "\n"
-        except Error, err: 
+        except Exception as err: 
             # fail gracefully if insert fails
             errMsg = "// Insert failed: " + err + "\n"
             pass
@@ -77,7 +76,7 @@ class MainHandler(webapp.RequestHandler):
         if errMsg !="":
             self.response.out.write(errMsg)
             
-        q = db.GqlQuery("SELECT * FROM LogUser " + 
+        q = ndb.gql("SELECT * FROM LogUser " + 
             "WHERE serverName = :1 AND userActive = True", 
             string.lower(QserverName)) 
         results = q.get() 
@@ -91,11 +90,5 @@ class MainHandler(webapp.RequestHandler):
                 chat_message_sent = (status_code == xmpp.NO_ERROR)
                 
 
-def main():
-    application = webapp.WSGIApplication([('/logger.js', MainHandler)],
-                                         debug=True)
-    util.run_wsgi_app(application)
-
-
-if __name__ == '__main__':
-    main()
+application = webapp2.WSGIApplication([('/logger.js', MainHandler)],
+                                     debug=True)
