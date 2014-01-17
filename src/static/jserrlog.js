@@ -40,6 +40,7 @@ window.onerror=function(msg, file_loc, line_no){
 		// process any existing onerror handler 
 		jsErrLog.fnPreviousOnErrorHandler(msg, file_loc, line_no);
 	}
+    // Let browser display error in console.
 	return false;
 }
 
